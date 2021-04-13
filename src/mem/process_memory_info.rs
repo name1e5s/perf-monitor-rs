@@ -8,7 +8,8 @@ pub struct ProcessMemoryInfo {
     /// On Windows this is an alias for wset field and it matches "Mem Usage"
     /// column of taskmgr.exe.
     pub resident_set_size: u64,
-    #[cfg(not(linux))]
+    #[cfg(not(target_os = "linux"))]
+    #[cfg_attr(doc, doc(cfg(not(linux))))]
     pub resident_set_size_peak: u64,
 
     /// this is the total amount of virtual memory used by the process.
@@ -33,10 +34,12 @@ pub struct ProcessMemoryInfo {
     ///    + page_table
     ///
     /// details: <https://github.com/apple/darwin-xnu/blob/master/osfmk/kern/task.c>
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[cfg_attr(doc, doc(macos))]
     pub phys_footprint: u64,
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[cfg_attr(doc, doc(macos))]
     pub compressed: u64,
 }
 
@@ -85,12 +88,12 @@ fn get_process_memory_info_impl() -> Result<ProcessMemoryInfo> {
     Ok(ProcessMemoryInfo {
         resident_set_size: parts
             .next()
-            .map(std::str::parse)
+            .map(|s|s.parse().ok())
             .flatten()
             .unwrap_or_default(),
         virtual_memory_size: parts
             .next()
-            .map(std::str::parse)
+            .map(|s|s.parse().ok())
             .flatten()
             .unwrap_or_default(),
     })
